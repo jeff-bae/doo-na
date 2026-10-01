@@ -6,8 +6,9 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
-      # 컨테이너 안에서는 호스트에 게시된 Ollama 포트로 접속
-      OLLAMA_URL: ${DOCKER_OLLAMA_URL:-http://host.docker.internal:8001}
+      # 기본 LLM 서버 — 컨테이너 안에서는 호스트에 게시된 Ollama 포트로 접속
+      # (GPU 서버로 옮기면 .env 에 DOCKER_LLM_URL 또는 캐릭터별 *_URL 지정)
+      LLM_URL: ${DOCKER_LLM_URL:-${DOCKER_OLLAMA_URL:-http://host.docker.internal:8001}}
       DB_PATH: data/doona.db
       PORT: 3000
       TOOLS_URL: http://doona-tools:4000/mcp

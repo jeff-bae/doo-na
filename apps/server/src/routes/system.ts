@@ -3,13 +3,14 @@ import type { HealthResponse, PersonasResponse } from '@doona/shared';
 import { requireAuth, requireAdmin } from '../auth.js';
 import { config } from '../config.js';
 import { modelGate } from '../modelGate.js';
-import { ping } from '../ollama.js';
-import { PERSONAS, getPersona, publicPersona } from '../personas.js';
+import { ping } from '../llm.js';
+import { PERSONAS, endpoints, getPersona, publicPersona } from '../personas.js';
 import { listTools } from '../tools.js';
 
 export async function systemRoutes(app: FastifyInstance) {
   app.get('/api/health', async (): Promise<HealthResponse> => {
-    const ollama = await ping();
+    // 캐릭터들이 쓰는 LLM 서버가 모두 응답해야 정상
+    const ollama = (await Promise.all(endpoints().map(ping))).every(Boolean);
     return { ok: true, ollama, model: getPersona(config.defaultPersona).model };
   });
 

@@ -132,7 +132,10 @@ npm run tauri -w @doona/web -- build
 | 이름 | 기본값 | 설명 |
 |---|---|---|
 | `PORT` | 3000 | 서버 포트 |
-| `OLLAMA_URL` | http://127.0.0.1:8001 | Ollama 주소 (Docker에서는 `DOCKER_OLLAMA_URL`, 기본 `host.docker.internal:8001`) |
+| `LLM_KIND` | ollama | `ollama` 또는 `openai` (OpenAI 호환 서버) |
+| `LLM_URL` | http://127.0.0.1:8001 | 기본 LLM 서버 주소 (예전 이름 `OLLAMA_URL` 도 인식). Docker 에서는 `DOCKER_LLM_URL`, 기본 `host.docker.internal:8001` |
+| `LLM_API_KEY` / `LLM_EXTRA_SAMPLING` | — / true | OpenAI 호환 서버 키 / `top_k`·`repetition_penalty` 전송 여부 |
+| `<LIVELY\|SHY\|CAREFUL>_LLM` · `_URL` · `_API_KEY` | (기본값 따름) | 캐릭터별 LLM 서버 |
 | `LIVELY_MODEL` / `SHY_MODEL` / `CAREFUL_MODEL` | 1.5b / 7b / 14b | 대화 상대별 모델 (`apps/server/src/personas.ts` 에 성격·설명) |
 | `DEFAULT_PERSONA` | careful | 새 대화 기본 대화 상대 |
 | `GATE_WAIT` | 300 | 큰 모델 교체 대기 한도(초) |
@@ -209,6 +212,44 @@ npm run tauri -w @doona/web -- build
 3. `docker compose up -d --build doona-tools` — 두나 서버는 1분 안에 새 도구를 인식하고 화면 도구 메뉴에 나타남
 
 팁: 작은 모델은 숫자 해석을 자주 틀립니다. 결과에 해석을 같이 붙이면 정확해집니다 (예: `강수확률 4% (비 올 가능성 낮음)`, 요일에 `[주말]` 표시).
+
+## LLM 서버 바꾸기 (Ollama ↔ vLLM 등)
+
+LLM 서버와 통신하는 코드는 `apps/server/src/llm.ts` 한 곳에 있고, 두 방식을 지원합니다.
+
+| `LLM_KIND` | 대상 | 특징 |
+|---|---|---|
+| `ollama` (기본) | Ollama | 컨텍스트 길이·모델 내리기 사용 → **모델 게이트**(큰 모델 하나씩 교체) 동작. CPU 서버에 적합 |
+| `openai` | vLLM, llama.cpp server, LM Studio, Ollama `/v1` 등 OpenAI 호환 서버 | 모델을 서버가 계속 띄워 둠 → 모델 게이트 안 씀. 컨텍스트 길이는 서버 실행 옵션으로 지정 |
+
+캐릭터마다 다른 서버를 쓸 수 있습니다 (`<LIVELY|SHY|CAREFUL>_LLM`, `_URL`, `_API_KEY`, `_MODEL`). 화면·Windows 앱은 수정할 필요가 없습니다.
+
+### 예: GPU 서버의 vLLM 으로 옮기기
+
+```bash
+# GPU 서버 (Linux + NVIDIA). 모델 하나당 vLLM 프로세스 하나
+docker run -d --gpus all --ipc=host -p 8000:8000 --name vllm-careful \
+  vllm/vllm-openai:latest \
+  --model Qwen/Qwen2.5-Coder-14B-Instruct-AWQ \
+  --served-model-name qwen2.5-coder-14b \
+  --max-model-len 16384 \
+  --api-key <긴-임의-문자열>
+```
+
+```bash
+# 두나 서버 .env — 신중만 GPU 서버로, 나머지는 기존 Ollama 유지
+CAREFUL_LLM=openai
+CAREFUL_URL=http://<gpu-server>:8000
+CAREFUL_API_KEY=<위와 같은 문자열>
+CAREFUL_MODEL=qwen2.5-coder-14b      # --served-model-name 과 같게
+```
+
+`docker compose up -d` 후 `docker compose logs doona | grep 두나` 로 연결 확인 (`🦉 두나 신중: … @ openai http://… — 연결됨`).
+
+옮긴 뒤 할 일:
+- `personas.ts` 의 캐릭터 설명(답변 시간 `약 1분` 등)을 실제 속도에 맞게 수정
+- 같은 질문 세트로 모델 비교 (정답률·속도) 후 기본 캐릭터 조정
+- GPU 서버의 vLLM 포트는 두나 서버에서만 접근하도록 방화벽/사설망 설정 (`--api-key` 도 필수)
 
 ## 메모리 관리 (모델 게이트)
 

@@ -1,5 +1,8 @@
-import { isHeavyModel } from './personas.js';
-import { listRunning, unloadModel } from './ollama.js';
+import { listRunning, unloadModel } from './llm.js';
+import { PERSONAS, gatedPersona, isHeavyModel } from './personas.js';
+
+/** 게이트 대상 모델이 도는 Ollama 주소 */
+const urlOf = (model: string) => gatedPersona(model)?.endpoint.url;
 
 /**
  * 큰 모델(7B, 14B)은 메모리(20GB) 때문에 한 번에 하나만 올린다.
@@ -26,14 +29,17 @@ class ModelGate {
 
   /** 서버 시작 시: 이미 올라가 있는 큰 모델을 파악하고, 둘 이상이면 하나만 남긴다 */
   async init(preferred: string, log: { info: (m: string) => void; warn: (m: string) => void }) {
+    const urls = [...new Set(PERSONAS.filter((p) => isHeavyModel(p.model)).map((p) => p.endpoint.url))];
+    if (!urls.length) return log.info('모델 게이트: 대상 없음 (큰 모델이 Ollama 가 아닌 서버에서 동작)');
     try {
-      const heavy = (await listRunning()).filter(isHeavyModel);
+      const running = (await Promise.all(urls.map((u) => listRunning(u)))).flat();
+      const heavy = running.filter(isHeavyModel);
       if (!heavy.length) return;
       const keep = heavy.includes(preferred) ? preferred : heavy[0]!;
       for (const m of heavy) {
         if (m !== keep) {
           log.warn(`큰 모델이 동시에 올라가 있어 내립니다: ${m}`);
-          await unloadModel(m);
+          await unloadModel(urlOf(m)!, m);
         }
       }
       this.resident = keep;
@@ -104,7 +110,7 @@ class ModelGate {
       this.switching = true;
       const old = this.resident;
       try {
-        await unloadModel(old);
+        await unloadModel(urlOf(old)!, old);
       } catch {
         /* 내리기 실패해도 Ollama가 메모리 부족 시 스스로 내린다 */
       }

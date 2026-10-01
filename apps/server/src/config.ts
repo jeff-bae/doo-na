@@ -31,7 +31,13 @@ export const config = {
   dbPath: path.resolve(root, process.env.DB_PATH ?? 'data/doona.db'),
   webDist: path.resolve(root, process.env.WEB_DIST ?? 'apps/web/dist'),
 
-  ollamaUrl: (process.env.OLLAMA_URL ?? 'http://127.0.0.1:8001').replace(/\/$/, ''),
+  /** 기본 LLM 서버. 캐릭터별로 <LIVELY|SHY|CAREFUL>_LLM / _URL / _API_KEY 로 따로 지정 가능 (personas.ts) */
+  llmKind: (process.env.LLM_KIND === 'openai' ? 'openai' : 'ollama') as 'ollama' | 'openai',
+  // OLLAMA_URL 은 예전 설정 이름 (호환)
+  llmUrl: (process.env.LLM_URL ?? process.env.OLLAMA_URL ?? 'http://127.0.0.1:8001').replace(/\/$/, ''),
+  llmApiKey: process.env.LLM_API_KEY,
+  /** openai 방식에서 top_k·repetition_penalty 도 보낼지 (vLLM·llama.cpp 는 받음, OpenAI 정품 API 는 거부) */
+  extraSampling: process.env.LLM_EXTRA_SAMPLING !== 'false',
   /** 새 대화의 기본 캐릭터 (lively | shy | careful) — 캐릭터별 모델은 personas.ts */
   defaultPersona: (process.env.DEFAULT_PERSONA ?? 'careful') as PersonaId,
   /** 큰 모델 교체를 기다리는 최대 시간 */

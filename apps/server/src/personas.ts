@@ -1,8 +1,20 @@
 import type { Persona, PersonaId } from '@doona/shared';
 import { config } from './config.js';
+import type { LlmEndpoint } from './llm.js';
+
+/** 캐릭터별 LLM 서버: <PREFIX>_LLM (ollama|openai), <PREFIX>_URL, <PREFIX>_API_KEY — 없으면 기본 LLM 서버 */
+function endpoint(prefix: string): LlmEndpoint {
+  const kind = process.env[`${prefix}_LLM`];
+  return {
+    kind: kind === 'openai' || kind === 'ollama' ? kind : config.llmKind,
+    url: (process.env[`${prefix}_URL`] ?? config.llmUrl).replace(/\/$/, ''),
+    apiKey: process.env[`${prefix}_API_KEY`] ?? config.llmApiKey,
+  };
+}
 
 interface PersonaDef extends Persona {
-  /** 큰 모델 — 메모리 때문에 큰 모델끼리는 동시에 올리지 않는다 (modelGate) */
+  endpoint: LlmEndpoint;
+  /** 큰 모델 — Ollama 에서는 메모리 때문에 큰 모델끼리 동시에 올리지 않는다 (modelGate) */
   heavy: boolean;
   keepAlive: string;
   /** 시스템 프롬프트에 덧붙이는 말투·성격 */
@@ -19,6 +31,7 @@ export const PERSONAS: PersonaDef[] = [
     speed: '약 5초',
     color: 'lime',
     model: process.env.LIVELY_MODEL ?? 'qwen2.5-coder:1.5b',
+    endpoint: endpoint('LIVELY'),
     heavy: false,
     keepAlive: '30m',
     style:
@@ -33,6 +46,7 @@ export const PERSONAS: PersonaDef[] = [
     speed: '약 30초',
     color: 'cyan',
     model: process.env.SHY_MODEL ?? 'qwen2.5-coder:7b',
+    endpoint: endpoint('SHY'),
     heavy: true,
     keepAlive: '30m',
     style:
@@ -47,6 +61,7 @@ export const PERSONAS: PersonaDef[] = [
     speed: '약 1분',
     color: 'violet',
     model: process.env.CAREFUL_MODEL ?? 'qwen2.5-coder:14b',
+    endpoint: endpoint('CAREFUL'),
     heavy: true,
     keepAlive: process.env.OLLAMA_KEEP_ALIVE ?? '24h',
     style:
@@ -62,11 +77,21 @@ export function getPersona(id: string | null | undefined): PersonaDef {
   return byId.get(id as PersonaId) ?? byId.get(config.defaultPersona) ?? PERSONAS[PERSONAS.length - 1]!;
 }
 
-export const isHeavyModel = (model: string) => PERSONAS.some((p) => p.heavy && p.model === model);
+/** 모델 게이트 대상: Ollama 에서 도는 큰 모델 (openai 방식 서버는 모델을 계속 띄워 두므로 제외) */
+export const gatedPersona = (model: string) =>
+  PERSONAS.find((p) => p.heavy && p.endpoint.kind === 'ollama' && p.model === model);
+export const isHeavyModel = (model: string) => !!gatedPersona(model);
+
+/** 서로 다른 LLM 서버 목록 (상태 확인용) */
+export function endpoints(): LlmEndpoint[] {
+  const seen = new Map<string, LlmEndpoint>();
+  for (const p of PERSONAS) seen.set(`${p.endpoint.kind} ${p.endpoint.url}`, p.endpoint);
+  return [...seen.values()];
+}
 
 /** 화면에 내보내는 정보 (내부 설정 제외) */
 export function publicPersona(p: PersonaDef): Persona {
-  const { heavy: _h, keepAlive: _k, style: _s, ...pub } = p;
+  const { heavy: _h, keepAlive: _k, style: _s, endpoint: _e, ...pub } = p;
   return pub;
 }
 

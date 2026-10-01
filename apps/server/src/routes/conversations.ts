@@ -7,7 +7,7 @@ import { config } from '../config.js';
 import { buildContext } from '../context.js';
 import { db, now } from '../db.js';
 import { GateTimeoutError, modelGate } from '../modelGate.js';
-import { streamChat, type StreamResult } from '../ollama.js';
+import { streamChat, type StreamResult } from '../llm.js';
 import { getPersona, isPersonaId, systemPromptFor } from '../personas.js';
 import { callTool, listTools, withToolResult } from '../tools.js';
 import { RateLimiter } from '../security.js';
@@ -323,7 +323,7 @@ export async function conversationRoutes(app: FastifyInstance) {
           message: `${persona.emoji} ${persona.name}을 깨우는 중이에요. 다른 두나가 답변을 마치면 바로 시작해요…`,
         }),
       );
-      for await (const piece of streamChat(model, context, abort.signal, result, persona.keepAlive)) {
+      for await (const piece of streamChat(persona.endpoint, model, context, abort.signal, result, persona.keepAlive)) {
         answer += piece;
         send({ type: 'delta', content: piece });
       }

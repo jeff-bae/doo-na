@@ -1,5 +1,5 @@
 import { config } from './config.js';
-import type { ChatMessage } from './ollama.js';
+import type { ChatMessage } from './llm.js';
 
 /**
  * 토큰 수 대략 추정. 한글은 글자당 약 1토큰, 영문/코드는 약 4글자당 1토큰.

@@ -1,0 +1,213 @@
+@import 'tailwindcss';
+/* 디자인 토큰 — unlayered 라서 Tailwind 기본 테마 변수(--radius-*, --shadow-*, --font-sans)보다 우선한다 */
+@import './styles/tokens.css';
+
+/* 토큰과 같은 기준: data-theme="dark" (theme-init.js / store/theme.ts 가 항상 명시적으로 설정) */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* 토큰 → Tailwind 유틸리티 (bg-surface-1, text-fg-2, border-line, bg-brand …) */
+@theme inline {
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-elevated: var(--surface-elevated);
+  --color-line: var(--border-subtle);
+  --color-line-strong: var(--border-strong);
+  --color-fg: var(--text-primary);
+  --color-fg-2: var(--text-secondary);
+  --color-fg-muted: var(--text-muted);
+  --color-fg-disabled: var(--text-disabled);
+  --color-overlay: var(--overlay);
+
+  --color-brand: var(--brand-indigo);
+  --color-brand-hover: var(--brand-indigo-hover);
+  --color-brand-strong: var(--brand-indigo-strong);
+  --color-accent-violet: var(--brand-violet);
+  --color-accent-cyan: var(--brand-cyan);
+  --color-accent-lime: var(--brand-lime);
+
+  --color-state-success: var(--color-success);
+  --color-state-warning: var(--color-warning);
+  --color-state-danger: var(--color-danger);
+  --color-state-info: var(--color-info);
+
+  /* 타이포 스케일 */
+  --text-xs: var(--text-xs-size);
+  --text-xs--line-height: var(--text-xs-line);
+  --text-xs--font-weight: var(--text-xs-weight);
+  --text-sm: var(--text-sm-size);
+  --text-sm--line-height: var(--text-sm-line);
+  --text-base: var(--text-body-size);
+  --text-base--line-height: var(--text-body-line);
+  --text-lg: var(--text-body-lg-size);
+  --text-lg--line-height: var(--text-body-lg-line);
+  --text-h3: var(--text-h3-size);
+  --text-h3--line-height: var(--text-h3-line);
+  --text-h3--font-weight: var(--text-h3-weight);
+  --text-h2: var(--text-h2-size);
+  --text-h2--line-height: var(--text-h2-line);
+  --text-h2--font-weight: var(--text-h2-weight);
+
+  --default-transition-duration: var(--duration-micro);
+  --default-transition-timing-function: var(--ease-standard);
+}
+
+/* 기본 스타일은 base 레이어 — Tailwind 유틸리티(focus-visible:outline-none 등)가 덮어쓸 수 있게 */
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    background: var(--surface-0);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm-size);
+    line-height: var(--text-sm-line);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  ::selection {
+    background: var(--selection-bg);
+    color: #14141a;
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+  /* iOS 입력 시 확대 방지 (16px 미만 입력창은 확대됨) */
+  @media (max-width: 639px) {
+    input,
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+  }
+}
+
+/* 앱 전용 클래스 — 유틸리티로 덮어쓸 수 있게 components 레이어 */
+@layer components {
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* 연한 강조 배경 — 토큰 색을 투명하게 섞는다 */
+  .tint-brand {
+    background: color-mix(in srgb, var(--brand-indigo) 10%, transparent);
+  }
+  .tint-warning {
+    background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+  }
+  .tint-danger {
+    background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  }
+  .tint-success {
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+  }
+
+  /* --- 마크다운 본문 --- */
+  .markdown {
+    font-size: var(--text-body-size);
+    line-height: var(--text-body-line);
+    overflow-wrap: anywhere;
+  }
+  .markdown > :first-child {
+    margin-top: 0;
+  }
+  .markdown > :last-child {
+    margin-bottom: 0;
+  }
+  .markdown p,
+  .markdown ul,
+  .markdown ol,
+  .markdown blockquote,
+  .markdown table {
+    margin-block: var(--space-12);
+  }
+  .markdown ul {
+    list-style: disc;
+    padding-left: var(--space-24);
+  }
+  .markdown ol {
+    list-style: decimal;
+    padding-left: var(--space-24);
+  }
+  .markdown li {
+    margin-block: var(--space-4);
+  }
+  .markdown h1,
+  .markdown h2 {
+    margin: var(--space-24) 0 var(--space-12);
+    font-size: var(--text-h3-size);
+    line-height: var(--text-h3-line);
+    font-weight: var(--text-h3-weight);
+  }
+  .markdown h3 {
+    margin: var(--space-16) 0 var(--space-8);
+    font-size: var(--text-body-lg-size);
+    font-weight: 600;
+  }
+  .markdown a {
+    color: var(--brand-indigo);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .markdown blockquote {
+    border-left: 3px solid var(--border-strong);
+    padding-left: var(--space-16);
+    color: var(--text-secondary);
+  }
+  .markdown :not(pre) > code {
+    border-radius: var(--radius-xs);
+    background: var(--surface-2);
+    padding: 1px 5px;
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+  }
+  .markdown table {
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+    font-size: var(--text-sm-size);
+  }
+  .markdown th,
+  .markdown td {
+    border: 1px solid var(--border-subtle);
+    padding: var(--space-4) var(--space-12);
+  }
+  .markdown th {
+    background: var(--surface-1);
+    font-weight: 600;
+  }
+  .markdown hr {
+    margin-block: var(--space-24);
+    border-color: var(--border-subtle);
+  }
+  .markdown pre code.hljs {
+    background: transparent;
+    padding: 0;
+  }
+
+  /* 스트리밍 중 커서 */
+  .cursor::after {
+    content: '▍';
+    margin-left: 2px;
+    color: var(--brand-indigo);
+    animation: pulse 1s var(--ease-standard) infinite;
+  }
+  @keyframes pulse {
+    50% {
+      opacity: 0.3;
+    }
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+}

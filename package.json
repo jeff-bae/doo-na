@@ -1,0 +1,15 @@
+{
+  "name": "doona",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "dev": "npm run dev -w @doona/server & npm run dev -w @doona/web & wait",
+    "dev:server": "npm run dev -w @doona/server",
+    "dev:web": "npm run dev -w @doona/web",
+    "build": "npm run build -w @doona/web && npm run build -w @doona/server",
+    "start": "npm run start -w @doona/server",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "user": "npm run user -w @doona/server --"
+  }
+}

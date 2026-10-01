@@ -1,0 +1,12 @@
+node_modules/
+dist/
+data/
+.env
+*.db
+*.db-*
+apps/web/src-tauri/target/
+apps/web/src-tauri/gen/
+backup/
+
+# Windows에서 받은 파일에 붙는 부가 정보
+*:Zone.Identifier

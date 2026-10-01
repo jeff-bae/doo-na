@@ -1,0 +1,50 @@
+services:
+  doona:
+    build: .
+    image: doona:latest
+    container_name: doona
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # 컨테이너 안에서는 호스트에 게시된 Ollama 포트로 접속
+      OLLAMA_URL: ${DOCKER_OLLAMA_URL:-http://host.docker.internal:8001}
+      DB_PATH: data/doona.db
+      PORT: 3000
+      TOOLS_URL: http://doona-tools:4000/mcp
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    ports:
+      # 호스트에서는 localhost 로만 접근 (외부 공개는 Cloudflare Tunnel 이 담당)
+      - 127.0.0.1:3000:3000
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - doona-tools
+
+  # 가벼운 도구 모음 (MCP 서버) — 날씨, 웹 검색 …
+  # 포트를 게시하지 않는다: doona 컨테이너만 내부 네트워크로 접근
+  doona-tools:
+    build:
+      context: .
+      dockerfile: apps/tools/Dockerfile
+    image: doona-tools:latest
+    container_name: doona-tools
+    restart: unless-stopped
+    environment:
+      TOOLS_TOKEN: ${TOOLS_TOKEN:-}
+      TZ: Asia/Seoul
+
+  # Cloudflare Tunnel — https://dona.cam → doona:3000
+  # .env 에 CLOUDFLARE_TUNNEL_TOKEN 과 COMPOSE_PROFILES=tunnel 을 설정하면 함께 실행된다.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: doona-tunnel
+    restart: unless-stopped
+    profiles: [tunnel]
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+      TUNNEL_METRICS: 0.0.0.0:2000
+    depends_on:
+      doona:
+        condition: service_healthy

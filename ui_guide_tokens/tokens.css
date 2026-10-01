@@ -1,0 +1,156 @@
+/*
+ * doosolution design tokens — generated from design-guide.md
+ * 이 파일은 design-tokens.md의 원본입니다. 값을 바꿀 때는 design-guide.md와
+ * design-tokens.md를 함께 갱신하세요. 프로젝트에 그대로 복사해서 사용합니다.
+ */
+
+@font-face {
+  font-family: 'Pretendard Var';
+  src: url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/variable/woff2/PretendardVariable.woff2') format('woff2-variations');
+  font-weight: 45 920;
+  font-display: swap;
+}
+
+:root {
+  /* brand */
+  --brand-indigo: #5B5FEE;
+  --brand-indigo-hover: #4A4DD6;
+  --brand-indigo-strong: #3D3FB8;
+  --brand-violet: #8B5CF6;
+  --brand-cyan: #22D3EE;
+  --brand-lime: #B6FF3B;
+  --brand-gradient: linear-gradient(135deg, var(--brand-indigo) 0%, var(--brand-violet) 55%, var(--brand-cyan) 100%);
+
+  /* radius — buttons & outlined boxes stay at xs/sm (<=4px); lg/full reserved for badges & tags */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-lg: 8px;
+  --radius-full: 999px;
+
+  /* neutral surfaces & text — light palette (bare :root = default light) */
+  --surface-0: #FFFFFF;
+  --surface-1: #F7F7FA;
+  --surface-2: #EEEEF3;
+  --surface-elevated: #FFFFFF;
+  --border-subtle: #E3E3EA;
+  --border-strong: #C7C7D1;
+  --text-primary: #14141A;
+  --text-secondary: #5C5C6B;
+  --text-muted: #8B8B98;
+  --text-disabled: rgba(20, 20, 26, 0.38);
+  --overlay: rgba(10, 10, 14, 0.4);
+  --focus-ring: var(--brand-indigo);
+  --selection-bg: var(--brand-lime);
+
+  /* semantic */
+  --color-success: #1F9D5C;
+  --color-warning: #B57A0A;
+  --color-danger: #D6303B;
+  --color-info: #1D6FC7;
+
+  /* elevation */
+  --shadow-sm: 0 1px 2px rgba(20, 20, 26, 0.06);
+  --shadow-md: 0 4px 16px rgba(20, 20, 26, 0.08);
+  --shadow-lg: 0 12px 32px rgba(20, 20, 26, 0.12);
+
+  /* typography */
+  --font-sans: 'Pretendard Var', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+
+  --text-display-size: 56px; --text-display-line: 1.1;  --text-display-weight: 700;
+  --text-h1-size: 40px;      --text-h1-line: 1.15;      --text-h1-weight: 700;
+  --text-h2-size: 30px;      --text-h2-line: 1.2;       --text-h2-weight: 600;
+  --text-h3-size: 22px;      --text-h3-line: 1.3;       --text-h3-weight: 600;
+  --text-body-lg-size: 18px; --text-body-lg-line: 1.6;  --text-body-lg-weight: 400;
+  --text-body-size: 16px;    --text-body-line: 1.6;     --text-body-weight: 400;
+  --text-sm-size: 14px;      --text-sm-line: 1.5;       --text-sm-weight: 400;
+  --text-xs-size: 12px;      --text-xs-line: 1.4;       --text-xs-weight: 500;
+
+  /* spacing — 4px base grid */
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-48: 48px;
+  --space-64: 64px;
+  --space-96: 96px;
+  --space-128: 128px;
+
+  /* motion */
+  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-micro: 180ms;
+  --duration-layout: 300ms;
+
+  /* form control & button height scale (agent-dev/manage-dev 공통) */
+  --control-height-xs: 28px;
+  --control-height-sm: 35px;
+  --control-height-md: 40px;
+  --control-height-lg: 48px;
+  --control-pad-x-input-xs: 8px;
+  --control-pad-x-input-sm: 10px;
+  --control-pad-x-input-md: 12px;
+  --control-pad-x-input-lg: 16px;
+  --control-pad-x-btn-xs: 10px;
+  --control-pad-x-btn-sm: 14px;
+  --control-pad-x-btn-md: 18px;
+  --control-pad-x-btn-lg: 24px;
+
+  /* icon sizes (Remixicon) */
+  --icon-sm: 16px;
+  --icon-md: 20px;
+  --icon-lg: 24px;
+
+  /* z-index layers — 낮은 값부터: dropdown < sticky < tooltip < drawer < modal < toast */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-tooltip: 300;
+  --z-drawer: 400;
+  --z-modal: 500;
+  --z-toast: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --surface-0: #0B0B10;
+    --surface-1: #131318;
+    --surface-2: #1C1C24;
+    --surface-elevated: #20202B;
+    --border-subtle: #2A2A34;
+    --border-strong: #3A3A46;
+    --text-primary: #F5F5F7;
+    --text-secondary: #A0A0AE;
+    --text-muted: #6B6B7A;
+    --text-disabled: rgba(245, 245, 247, 0.38);
+    --overlay: rgba(6, 6, 10, 0.6);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
+    --color-success: #2FD180;
+    --color-warning: #F5B942;
+    --color-danger: #F14F5A;
+    --color-info: #4EA1FF;
+  }
+}
+
+:root[data-theme="dark"] {
+  --surface-0: #0B0B10;
+  --surface-1: #131318;
+  --surface-2: #1C1C24;
+  --surface-elevated: #20202B;
+  --border-subtle: #2A2A34;
+  --border-strong: #3A3A46;
+  --text-primary: #F5F5F7;
+  --text-secondary: #A0A0AE;
+  --text-muted: #6B6B7A;
+  --text-disabled: rgba(245, 245, 247, 0.38);
+  --overlay: rgba(6, 6, 10, 0.6);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
+  --color-success: #2FD180;
+  --color-warning: #F5B942;
+  --color-danger: #F14F5A;
+  --color-info: #4EA1FF;
+}

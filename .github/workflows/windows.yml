@@ -18,7 +18,9 @@ jobs:
       - uses: swatinem/rust-cache@v2
         with:
           workspaces: apps/web/src-tauri -> target
-      - run: npm ci
+      # 데스크톱 앱에는 웹 화면만 들어간다 — 서버 패키지(better-sqlite3 네이티브 빌드)는 설치하지 않음
+      - name: 의존성 설치 (웹만)
+        run: npm ci -w @doona/web --include-workspace-root=false
       - name: Tauri 빌드
         run: npm run tauri -w @doona/web -- build
         env:

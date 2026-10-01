@@ -7,10 +7,18 @@ import pkg from './package.json' with { type: 'json' };
 // Tauri CLI가 빌드할 때 TAURI_ENV_PLATFORM 을 설정한다 → 데스크톱 앱에는 서비스워커 불필요
 const isTauri = !!process.env.TAURI_ENV_PLATFORM;
 
+/** 데스크톱 앱 빌드에는 PWA 플러그인이 없으므로, 앱 코드가 쓰는 가상 모듈을 빈 구현으로 대신한다 */
+const pwaRegisterStub = {
+  name: 'doona:pwa-register-stub',
+  resolveId: (id: string) => (id === 'virtual:pwa-register' ? '\0pwa-register-stub' : null),
+  load: (id: string) => (id === '\0pwa-register-stub' ? 'export const registerSW = () => async () => {};' : null),
+};
+
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    isTauri && pwaRegisterStub,
     !isTauri &&
       VitePWA({
         registerType: 'prompt',

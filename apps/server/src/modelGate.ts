@@ -1,3 +1,4 @@
+import { config } from './config.js';
 import { listRunning, unloadModel } from './llm.js';
 import { PERSONAS, gatedPersona, isHeavyModel } from './personas.js';
 
@@ -30,6 +31,7 @@ class ModelGate {
   /** 서버 시작 시: 이미 올라가 있는 큰 모델을 파악하고, 둘 이상이면 하나만 남긴다 */
   async init(preferred: string, log: { info: (m: string) => void; warn: (m: string) => void }) {
     const urls = [...new Set(PERSONAS.filter((p) => isHeavyModel(p.model)).map((p) => p.endpoint.url))];
+    if (!config.modelGate) return log.info('모델 게이트: 꺼짐 (MODEL_GATE=off — 큰 모델도 동시에 상주)');
     if (!urls.length) return log.info('모델 게이트: 대상 없음 (큰 모델이 Ollama 가 아닌 서버에서 동작)');
     try {
       const running = (await Promise.all(urls.map((u) => listRunning(u)))).flat();

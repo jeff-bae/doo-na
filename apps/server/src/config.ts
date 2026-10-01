@@ -40,6 +40,11 @@ export const config = {
   extraSampling: process.env.LLM_EXTRA_SAMPLING !== 'false',
   /** 새 대화의 기본 캐릭터 (lively | shy | careful) — 캐릭터별 모델은 personas.ts */
   defaultPersona: (process.env.DEFAULT_PERSONA ?? 'careful') as PersonaId,
+  /**
+   * 모델 게이트 — Ollama 에서 큰 모델(소심·신중)을 한 번에 하나만 올린다.
+   * 메모리가 넉넉한 서버(예: Mac Studio 64GB)에서는 off 로 두면 모두 동시에 상주
+   */
+  modelGate: process.env.MODEL_GATE !== 'off',
   /** 큰 모델 교체를 기다리는 최대 시간 */
   gateWaitMs: num('GATE_WAIT', 300) * 1000,
   numCtx: num('NUM_CTX', 8192),

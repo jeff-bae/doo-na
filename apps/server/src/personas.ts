@@ -79,7 +79,7 @@ export function getPersona(id: string | null | undefined): PersonaDef {
 
 /** 모델 게이트 대상: Ollama 에서 도는 큰 모델 (openai 방식 서버는 모델을 계속 띄워 두므로 제외) */
 export const gatedPersona = (model: string) =>
-  PERSONAS.find((p) => p.heavy && p.endpoint.kind === 'ollama' && p.model === model);
+  config.modelGate ? PERSONAS.find((p) => p.heavy && p.endpoint.kind === 'ollama' && p.model === model) : undefined;
 export const isHeavyModel = (model: string) => !!gatedPersona(model);
 
 /** 서로 다른 LLM 서버 목록 (상태 확인용) */

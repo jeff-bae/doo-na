@@ -138,6 +138,7 @@ npm run tauri -w @doona/web -- build
 | `<LIVELY\|SHY\|CAREFUL>_LLM` · `_URL` · `_API_KEY` | (기본값 따름) | 캐릭터별 LLM 서버 |
 | `LIVELY_MODEL` / `SHY_MODEL` / `CAREFUL_MODEL` | 1.5b / 7b / 14b | 대화 상대별 모델 (`apps/server/src/personas.ts` 에 성격·설명) |
 | `DEFAULT_PERSONA` | careful | 새 대화 기본 대화 상대 |
+| `MODEL_GATE` | on | `off` 면 큰 모델(소심·신중)도 동시에 상주 — 메모리가 넉넉한 서버용 |
 | `GATE_WAIT` | 300 | 큰 모델 교체 대기 한도(초) |
 | `NUM_CTX` | 8192 | 컨텍스트 길이. 대화가 길면 오래된 메시지부터 잘라냄 |
 | `MAX_TOKENS` | 2048 | 답변 최대 길이 (반복 루프 방지) |
@@ -250,6 +251,47 @@ CAREFUL_MODEL=qwen2.5-coder-14b      # --served-model-name 과 같게
 - `personas.ts` 의 캐릭터 설명(답변 시간 `약 1분` 등)을 실제 속도에 맞게 수정
 - 같은 질문 세트로 모델 비교 (정답률·속도) 후 기본 캐릭터 조정
 - GPU 서버의 vLLM 포트는 두나 서버에서만 접근하도록 방화벽/사설망 설정 (`--api-key` 도 필수)
+
+## Mac Studio 로 옮기기
+
+Apple Silicon Mac 은 Docker 안에서 GPU 를 쓸 수 없으므로 **Ollama 는 Mac 에 직접 설치**하고, 두나(doona·doona-tools·cloudflared)는 지금처럼 Docker 로 돌립니다. 코드 수정은 필요 없습니다.
+
+```
+Mac Studio
+├─ Ollama (직접 설치, Metal GPU, localhost:11434 전용)
+└─ Docker: doona · doona-tools · cloudflared
+```
+
+1. **Ollama 설치·설정** (https://ollama.com/download)
+   ```bash
+   launchctl setenv OLLAMA_KEEP_ALIVE -1          # 모델 계속 상주
+   launchctl setenv OLLAMA_MAX_LOADED_MODELS 4
+   launchctl setenv OLLAMA_NUM_PARALLEL 2
+   # Ollama 앱 재시작 후
+   ollama pull qwen2.5-coder:1.5b && ollama pull qwen2.5-coder:14b && ollama pull qwen2.5-coder:32b
+   ```
+   Ollama 는 기본값(localhost)으로 두세요 — 외부에 열 필요 없음.
+2. **Docker Desktop**(또는 OrbStack) 설치, 로그인 시 자동 실행
+3. **소스 받기 + 데이터 옮기기**
+   ```bash
+   git clone git@github.com:jeff-bae/doo-na.git && cd doo-na
+   # 기존 서버에서: docker compose stop doona && 아래 파일들을 복사
+   #   .env, data/doona.db
+   ```
+4. **.env 수정**
+   ```bash
+   DOCKER_LLM_URL=http://host.docker.internal:11434
+   MODEL_GATE=off                     # 64GB 면 큰 모델 동시 상주
+   LIVELY_MODEL=qwen2.5-coder:1.5b
+   SHY_MODEL=qwen2.5-coder:14b
+   CAREFUL_MODEL=qwen2.5-coder:32b
+   NUM_CTX=16384
+   FIRST_TOKEN_TIMEOUT=120
+   ```
+5. `docker compose up -d --build` → `docker compose logs doona | grep 두나` 로 연결 확인
+6. 기존 서버의 터널(cloudflared)은 끄기 — 같은 토큰으로 두 곳에서 돌면 요청이 나뉨
+7. **Mac 상시 운영**: 시스템 설정 → 에너지 → "자동으로 잠자기 방지" 켜기, "정전 후 자동으로 시작" 켜기 (`sudo pmset -a sleep 0 autorestart 1`)
+8. `apps/server/src/personas.ts` 의 캐릭터 설명(답변 시간 등)을 실제 속도에 맞게 수정
 
 ## 메모리 관리 (모델 게이트)
 
